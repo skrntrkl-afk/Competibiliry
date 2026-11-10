@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IV Compatibility & Solution Warning Checker (ASHP Reference)</title>
+  <link href="https://googleapis.com" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0f766e;
+      --primary-hover: #115e59;
+      --primary-light: #ccfbf1;
+      --bg-gradient: linear-gradient(135deg, #f0fdfa 0%, #e0f2fe 100%);
+      --card-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border-color: #cbd5e1;
+      
+      --green-bg: #dcfce7;
+      --green-border: #86efac;
+      --green-text: #15803d;
+      
+      --red-bg: #fee2e2;
+      --red-border: #fca5a5;
+      --red-text: #b91c1c;
+
+      --amber-bg: #fef3c7;
+      --amber-border: #fcd34d;
+      --amber-text: #b45309;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Prompt', sans-serif;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 720px;
+      background: var(--card-bg);
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(15, 118, 110, 0.12);
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #0f766e 0%, #0369a1 100%);
+      color: white;
+      padding: 28px 24px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .header p {
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    .tabs {
+      display: flex;
+      background: #f1f5f9;
+      padding: 6px;
+      margin: 20px 24px 0;
+      border-radius: 12px;
+      gap: 6px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .tab-btn.active {
+      background: white;
+      color: var(--primary);
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .tab-content {
+      display: none;
+      padding: 24px;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+      position: relative;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.92rem;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: var(--text-main);
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 13px 16px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 10px;
+      font-size: 0.95rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
+    }
+
+    .autocomplete-list {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid var(--border-color);
+      border-top: none;
+      border-radius: 0 0 10px 10px;
+      max-height: 220px;
+      overflow-y: auto;
+      z-index: 1000;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      display: none;
+    }
+
+    .autocomplete-item {
+      padding: 10px 14px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 0.9rem;
+    }
+
+    .autocomplete-item:last-child {
+      border-bottom: none;
+    }
+
+    .autocomplete-item:hover {
+      background: #f0fdfa;
+    }
+
+    .badge {
+      font-size: 0.72rem;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-weight: 500;
+    }
+
+    .badge-abx { background: #e0f2fe; color: #0369a1; }
+    .badge-had { background: #fef3c7; color: #b45309; }
+    .badge-chemo { background: #fae8ff; color: #86198f; }
+    .badge-gen { background: #f1f5f9; color: #475569; }
+    .badge-sol { background: #ccfbf1; color: #0f766e; }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .btn-check {
+      flex: 3;
+      padding: 14px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-check:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-clear {
+      flex: 1;
+      padding: 14px;
+      background: #f1f5f9;
+      color: var(--text-muted);
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-clear:hover {
+      background: #e2e8f0;
+      color: var(--text-main);
+    }
+
+    .result-box {
+      margin-top: 24px;
+      padding: 20px;
+      border-radius: 14px;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .result-box.compatible {
+      display: block;
+      background: var(--green-bg);
+      border: 1.5px solid var(--green-border);
+    }
+
+    .result-box.incompatible {
+      display: block;
+      background: var(--red-bg);
+      border: 1.5px solid var(--red-border);
+    }
+
+    .result-box.warning {
+      display: block;
+      background: var(--amber-bg);
+      border: 1.5px solid var(--amber-border);
+    }
+
+    .status-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .compatible .status-title { color: var(--green-text); }
+    .incompatible .status-title { color: var(--red-text); }
+    .warning .status-title { color: var(--amber-text); }
+
+    .drug-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .drug-tag-pill {
+      background: rgba(255, 255, 255, 0.85);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-main);
+    }
+
+    .advice-box {
+      background: rgba(255, 255, 255, 0.75);
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 0.92rem;
+      line-height: 1.55;
+      color: var(--text-main);
+    }
+
+    .advice-box strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 0.95rem;
+    }
+
+    .footer-note {
+      max-width: 720px;
+      margin-top: 16px;
+      padding: 14px 18px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 12px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1>💉 ระบบตรวจสอบความเข้ากันได้ของยาฉีด</h1>
+      <p>อ้างอิงแนวทาง ASHP Injectable Drug Information (2027 Edition)</p>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('iv-tab', this)">1. IV Compatibility (ยา + ยา)</button>
+      <button class="tab-btn" onclick="switchTab('sol-tab', this)">2. Solution Warning (ยา + สารละลาย)</button>
+    </div>
+
+    <!-- Sheet 1: IV Compatibility -->
+    <div id="iv-tab" class="tab-content active">
+      <div class="form-group">
+        <label for="drug1">ชื่อยาฉีดชนิดที่ 1 (Drug A)</label>
+        <div class="input-wrapper">
+          <input type="text" id="drug1" placeholder="พิมพ์ชื่อยา เช่น Ceftriaxone, Vancomycin, Norepinephrine..." autocomplete="off">
+          <div id="list-drug1" class="autocomplete-list"></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="drug2">ชื่อยาฉีดชนิดที่ 2 (Drug B)</label>
+        <div class="input-wrapper">
+          <input type="text" id="drug2" placeholder="พิมพ์ชื่อยา เช่น Furosemide, Heparin, Midazolam..." autocomplete="off">
+          <div id="list-drug2" class="autocomplete-list"></div>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn-check" onclick="checkIVCompatibility()">ตรวจสอบความเข้ากันได้ (Y-site)</button>
+        <button class="btn-clear" onclick="clearIV()">ล้างข้อมูล</button>
+      </div>
+
+      <div id="iv-result" class="result-box"></div>
+    </div>
+
+    <!-- Sheet 2: Solution Warning -->
+    <div id="sol-tab" class="tab-content">
+      <div class="form-group">
+        <label for="sol-drug">ชื่อยาฉีดที่ต้องการผสม (Injectable Drug)</label>
+        <div class="input-wrapper">
+          <input type="text" id="sol-drug" placeholder="พิมพ์ชื่อยา เช่น Ceftriaxone, Amiodarone, Cisplatin..." autocomplete="off">
+          <div id="list-sol-drug" class="autocomplete-list"></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="solution-name">ชื่อสารละลาย / น้ำเกลือ (IV Solution)</label>
+        <div class="input-wrapper">
+          <input type="text" id="solution-name" placeholder="พิมพ์ชื่อสารละลาย เช่น Acetar, NSS, D5W, LRS..." autocomplete="off">
+          <div id="list-solution-name" class="autocomplete-list"></div>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn-check" onclick="checkSolutionCompatibility()">ตรวจสอบการผสมสารละลาย</button>
+        <button class="btn-clear" onclick="clearSolution()">ล้างข้อมูล</button>
+      </div>
+
+      <div id="sol-result" class="result-box"></div>
+    </div>
+  </div>
+
+  <div class="footer-note">
